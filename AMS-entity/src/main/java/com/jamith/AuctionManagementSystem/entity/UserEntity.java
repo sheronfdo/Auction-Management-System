@@ -1,4 +1,4 @@
-package com.jamith.AuctionManagementSystem.user.entity;
+package com.jamith.AuctionManagementSystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

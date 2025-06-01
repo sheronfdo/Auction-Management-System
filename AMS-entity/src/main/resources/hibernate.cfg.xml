@@ -14,7 +14,8 @@
         <property name="hibernate.format_sql">true</property>
         <property name="connection.pool_size">200</property>
         <property name="current_session_context_class">thread</property>
-        <mapping class="com.jamith.AuctionManagementSystem.user.entity.UserEntity"/>
-        <mapping class="com.jamith.AuctionManagementSystem.user.entity.SessionEntity"/>
+        <mapping class="com.jamith.AuctionManagementSystem.entity.UserEntity"/>
+        <mapping class="com.jamith.AuctionManagementSystem.entity.SessionEntity"/>
+        <mapping class="com.jamith.AuctionManagementSystem.entity.AuctionEntity"/>
     </session-factory>
 </hibernate-configuration>
