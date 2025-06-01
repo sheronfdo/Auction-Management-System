@@ -32,12 +32,13 @@ public class LoginServlet extends HttpServlet {
                 HttpSession httpSession = request.getSession();
                 httpSession.setAttribute("sessionToken", session.getSessionToken());
                 ProfileDTO profile = userSessionManager.getUserProfile(session.getSessionToken());
-                if ("ADMIN".equals(profile.getRole())) {
-                    response.sendRedirect("/admin/dashboard");
-                } else if ("SELLER".equals(profile.getRole())) {
+                if ("SELLER".equals(profile.getRole())) {
                     response.sendRedirect("seller-profile");
-                } else {
-                    response.sendRedirect("/buyer/buyer-profile");
+                }  else {
+                    userSessionManager.logout(session.getSessionToken());
+                    httpSession.invalidate();
+                    request.setAttribute("error", "Access denied: Seller role required");
+                    request.getRequestDispatcher("login.jsp").forward(request, response);
                 }
             } else if ("/register".equals(path)) {
                 UserDTO user = new UserDTO();
