@@ -1,0 +1,183 @@
+package com.jamith.AuctionManagementSystem.auction.bean;
+
+
+import com.jamith.AuctionManagementSystem.auction.util.HibernateUtil;
+import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionDTO;
+import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionSummaryDTO;
+import com.jamith.AuctionManagementSystem.core.auction.exception.AuctionException;
+import com.jamith.AuctionManagementSystem.core.auction.remote.AuctionManagerRemote;
+import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
+import com.jamith.AuctionManagementSystem.core.user.exception.UserException;
+import com.jamith.AuctionManagementSystem.core.user.remote.UserSessionManagerRemote;
+import com.jamith.AuctionManagementSystem.entity.AuctionEntity;
+import com.jamith.AuctionManagementSystem.entity.UserEntity;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Stateless
+public class AuctionManagerBean implements AuctionManagerRemote {
+    private static final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+
+    @EJB
+    private UserSessionManagerRemote userSessionManager;
+
+    @Override
+    public void createAuction(AuctionDTO auction, String sessionToken) throws AuctionException {
+        try {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"SELLER".equals(profile.getRole())) {
+                throw new AuctionException("Only sellers can create auctions");
+            }
+            if (auction.getItemName() == null || auction.getStartPrice() == null || 
+                auction.getBidIncrement() == null || auction.getStartTime() == null || 
+                auction.getEndTime() == null) {
+                throw new AuctionException("Required auction fields are missing");
+            }
+            if (auction.getStartTime().isBefore(LocalDateTime.now()) ||
+                auction.getEndTime().isBefore(auction.getStartTime())) {
+                throw new AuctionException("Invalid start or end time");
+            }
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                UserEntity seller = session.get(UserEntity.class, profile.getUserId());
+                AuctionEntity entity = new AuctionEntity();
+                entity.setSeller(seller);
+                entity.setItemName(auction.getItemName());
+                entity.setDescription(auction.getDescription());
+                entity.setStartPrice(auction.getStartPrice());
+                entity.setBidIncrement(auction.getBidIncrement());
+                entity.setStatus("PENDING");
+                entity.setStartTime(auction.getStartTime());
+                entity.setEndTime(auction.getEndTime());
+                entity.setCreatedAt(LocalDateTime.now());
+                session.persist(entity);
+                session.getTransaction().commit();
+            }
+        } catch (UserException e) {
+            throw new AuctionException("Invalid session: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateAuction(AuctionDTO auction, String sessionToken) throws AuctionException {
+        try {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"SELLER".equals(profile.getRole())) {
+                throw new AuctionException("Only sellers can update auctions");
+            }
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                AuctionEntity entity = session.get(AuctionEntity.class, auction.getAuctionId(), org.hibernate.LockMode.OPTIMISTIC);
+                if (entity == null) {
+                    throw new AuctionException("Auction not found");
+                }
+                if (!entity.getSeller().getUserId().equals(profile.getUserId())) {
+                    throw new AuctionException("Not authorized to update this auction");
+                }
+                if (!"PENDING".equals(entity.getStatus())) {
+                    throw new AuctionException("Only pending auctions can be updated");
+                }
+                if (auction.getItemName() != null) entity.setItemName(auction.getItemName());
+                if (auction.getDescription() != null) entity.setDescription(auction.getDescription());
+                if (auction.getStartPrice() != null) entity.setStartPrice(auction.getStartPrice());
+                if (auction.getBidIncrement() != null) entity.setBidIncrement(auction.getBidIncrement());
+                if (auction.getStartTime() != null && auction.getStartTime().isAfter(LocalDateTime.now())) {
+                    entity.setStartTime(auction.getStartTime());
+                }
+                if (auction.getEndTime() != null && auction.getEndTime().isAfter(entity.getStartTime())) {
+                    entity.setEndTime(auction.getEndTime());
+                }
+                entity.setUpdatedAt(LocalDateTime.now());
+                session.merge(entity);
+                session.getTransaction().commit();
+            } catch (org.hibernate.StaleObjectStateException e) {
+                throw new AuctionException("Auction update failed due to concurrent modification");
+            }
+        } catch (UserException e) {
+            throw new AuctionException("Invalid session: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void closeAuction(Long auctionId, String sessionToken) throws AuctionException {
+        try {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"ADMIN".equals(profile.getRole())) {
+                throw new AuctionException("Only admins can close auctions manually");
+            }
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                AuctionEntity entity = session.get(AuctionEntity.class, auctionId, org.hibernate.LockMode.OPTIMISTIC);
+                if (entity == null) {
+                    throw new AuctionException("Auction not found");
+                }
+                if ("CLOSED".equals(entity.getStatus())) {
+                    throw new AuctionException("Auction already closed");
+                }
+                entity.setStatus("CLOSED");
+                entity.setUpdatedAt(LocalDateTime.now());
+                session.merge(entity);
+                session.getTransaction().commit();
+                // TODO: Publish JMS message to AuctionUpdatesTopic
+            } catch (org.hibernate.StaleObjectStateException e) {
+                throw new AuctionException("Auction closure failed due to concurrent modification");
+            }
+        } catch (UserException e) {
+            throw new AuctionException("Invalid session: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<AuctionSummaryDTO> listActiveAuctions() throws AuctionException {
+        try (Session session = sessionFactory.openSession()) {
+            Query<AuctionEntity> query = session.createQuery(
+                "FROM AuctionEntity a WHERE a.status = :status AND a.startTime <= :now AND a.endTime > :now",
+                AuctionEntity.class
+            );
+            query.setParameter("status", "ACTIVE");
+            query.setParameter("now", LocalDateTime.now());
+            List<AuctionEntity> entities = query.getResultList();
+            return entities.stream().map(e -> {
+                AuctionSummaryDTO dto = new AuctionSummaryDTO();
+                dto.setAuctionId(e.getAuctionId());
+                dto.setItemName(e.getItemName());
+                dto.setCurrentBid(e.getCurrentBid() != null ? e.getCurrentBid() : e.getStartPrice());
+                dto.setEndTime(e.getEndTime());
+                return dto;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new AuctionException("Failed to list auctions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public AuctionDTO getAuctionDetails(Long auctionId) throws AuctionException {
+        try (Session session = sessionFactory.openSession()) {
+            AuctionEntity entity = session.get(AuctionEntity.class, auctionId);
+            if (entity == null) {
+                throw new AuctionException("Auction not found");
+            }
+            AuctionDTO dto = new AuctionDTO();
+            dto.setAuctionId(entity.getAuctionId());
+            dto.setSellerId(entity.getSeller().getUserId());
+            dto.setItemName(entity.getItemName());
+            dto.setDescription(entity.getDescription());
+            dto.setStartPrice(entity.getStartPrice());
+            dto.setBidIncrement(entity.getBidIncrement());
+            dto.setCurrentBid(entity.getCurrentBid());
+            dto.setStatus(entity.getStatus());
+            dto.setStartTime(entity.getStartTime());
+            dto.setEndTime(entity.getEndTime());
+            return dto;
+        } catch (Exception e) {
+            throw new AuctionException("Failed to retrieve auction details: " + e.getMessage());
+        }
+    }
+}
