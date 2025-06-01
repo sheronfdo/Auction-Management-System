@@ -25,6 +25,12 @@
             <version>1.0</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>com.jamith.AuctionManagementSystem</groupId>
+            <artifactId>AMS-entity</artifactId>
+            <version>1.0</version>
+            <type>jar</type>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
 <!--            <artifactId>AMS-ejb</artifactId>-->
@@ -34,6 +40,12 @@
         <dependency>
             <groupId>com.jamith.AuctionManagementSystem</groupId>
             <artifactId>AMS-user-ejb</artifactId>
+            <version>1.0</version>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jamith.AuctionManagementSystem</groupId>
+            <artifactId>AMS-auction-ejb</artifactId>
             <version>1.0</version>
             <type>ejb</type>
         </dependency>
@@ -77,6 +89,11 @@
                             <artifactId>AMS-core</artifactId>
                             <bundleFileName>AMS-core.jar</bundleFileName>
                         </jarModule>
+                        <jarModule>
+                            <groupId>com.jamith.AuctionManagementSystem</groupId>
+                            <artifactId>AMS-entity</artifactId>
+                            <bundleFileName>AMS-entity.jar</bundleFileName>
+                        </jarModule>
 <!--                        <ejbModule>-->
 <!--                            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
 <!--                            <artifactId>AMS-ejb</artifactId>-->
@@ -86,6 +103,11 @@
                             <groupId>com.jamith.AuctionManagementSystem</groupId>
                             <artifactId>AMS-user-ejb</artifactId>
                             <bundleFileName>AMS-user-ejb.jar</bundleFileName>
+                        </ejbModule>
+                        <ejbModule>
+                            <groupId>com.jamith.AuctionManagementSystem</groupId>
+                            <artifactId>AMS-auction-ejb</artifactId>
+                            <bundleFileName>AMS-auction-ejb.jar</bundleFileName>
                         </ejbModule>
 <!--                        <webModule>-->
 <!--                            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
