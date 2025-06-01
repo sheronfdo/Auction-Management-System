@@ -25,15 +25,39 @@
             <version>1.0</version>
             <type>jar</type>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
+<!--            <artifactId>AMS-ejb</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--            <type>ejb</type>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.jamith.AuctionManagementSystem</groupId>
-            <artifactId>AMS-ejb</artifactId>
+            <artifactId>AMS-user-ejb</artifactId>
             <version>1.0</version>
             <type>ejb</type>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
+<!--            <artifactId>AMS-web</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--            <type>war</type>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.jamith.AuctionManagementSystem</groupId>
-            <artifactId>AMS-web</artifactId>
+            <artifactId>AMS-buyer-web</artifactId>
+            <version>1.0</version>
+            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jamith.AuctionManagementSystem</groupId>
+            <artifactId>AMS-admin-web</artifactId>
+            <version>1.0</version>
+            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jamith.AuctionManagementSystem</groupId>
+            <artifactId>AMS-seller-web</artifactId>
             <version>1.0</version>
             <type>war</type>
         </dependency>
@@ -53,16 +77,39 @@
                             <artifactId>AMS-core</artifactId>
                             <bundleFileName>AMS-core.jar</bundleFileName>
                         </jarModule>
+<!--                        <ejbModule>-->
+<!--                            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
+<!--                            <artifactId>AMS-ejb</artifactId>-->
+<!--                            <bundleFileName>AMS-ejb.jar</bundleFileName>-->
+<!--                        </ejbModule>-->
                         <ejbModule>
                             <groupId>com.jamith.AuctionManagementSystem</groupId>
-                            <artifactId>AMS-ejb</artifactId>
-                            <bundleFileName>AMS-ejb.jar</bundleFileName>
+                            <artifactId>AMS-user-ejb</artifactId>
+                            <bundleFileName>AMS-user-ejb.jar</bundleFileName>
                         </ejbModule>
+<!--                        <webModule>-->
+<!--                            <groupId>com.jamith.AuctionManagementSystem</groupId>-->
+<!--                            <artifactId>AMS-web</artifactId>-->
+<!--                            <bundleFileName>AMS-web.war</bundleFileName>-->
+<!--                            <contextRoot>/web</contextRoot>-->
+<!--                        </webModule>-->
                         <webModule>
                             <groupId>com.jamith.AuctionManagementSystem</groupId>
-                            <artifactId>AMS-web</artifactId>
-                            <bundleFileName>AMS-web.war</bundleFileName>
-                            <contextRoot>/web</contextRoot>
+                            <artifactId>AMS-buyer-web</artifactId>
+                            <bundleFileName>AMS-buyer-web.war</bundleFileName>
+                            <contextRoot>/buyer</contextRoot>
+                        </webModule>
+                        <webModule>
+                            <groupId>com.jamith.AuctionManagementSystem</groupId>
+                            <artifactId>AMS-admin-web</artifactId>
+                            <bundleFileName>AMS-admin-web.war</bundleFileName>
+                            <contextRoot>/admin</contextRoot>
+                        </webModule>
+                        <webModule>
+                            <groupId>com.jamith.AuctionManagementSystem</groupId>
+                            <artifactId>AMS-seller-web</artifactId>
+                            <bundleFileName>AMS-seller-web.war</bundleFileName>
+                            <contextRoot>/seller</contextRoot>
                         </webModule>
                     </modules>
                 </configuration>
