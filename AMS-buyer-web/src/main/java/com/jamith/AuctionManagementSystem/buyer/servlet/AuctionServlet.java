@@ -1,4 +1,4 @@
-package com.jamith.AuctionManagementSystem.admin.servlet;
+package com.jamith.AuctionManagementSystem.buyer.servlet;
 
 import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
 import com.jamith.AuctionManagementSystem.core.user.exception.UserException;
@@ -13,8 +13,8 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet({"/dashboard", "/admin-profile"})
-public class AdminServlet extends HttpServlet {
+@WebServlet("/auctions")
+public class AuctionServlet extends HttpServlet {
     @EJB
     private UserSessionManagerRemote userSessionManager;
 
@@ -26,10 +26,9 @@ public class AdminServlet extends HttpServlet {
             return;
         }
         String sessionToken = (String) httpSession.getAttribute("sessionToken");
-        String path = request.getServletPath();
         try {
             ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
-            if (!"ADMIN".equals(profile.getRole())) {
+            if (!"BUYER".equals(profile.getRole())) {
                 userSessionManager.logout(sessionToken);
                 httpSession.invalidate();
                 response.sendRedirect("login.jsp");
@@ -38,35 +37,10 @@ public class AdminServlet extends HttpServlet {
             request.setAttribute("email", profile.getEmail());
             request.setAttribute("firstName", profile.getFirstName());
             request.setAttribute("lastName", profile.getLastName());
-            String jsp = "/admin-profile".equals(path) ? "profile.jsp" : "dashboard.jsp";
-            request.getRequestDispatcher(jsp).forward(request, response);
+            request.getRequestDispatcher("auctions.jsp").forward(request, response);
         } catch (UserException e) {
             httpSession.invalidate();
             response.sendRedirect("login.jsp");
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if ("/admin-profile".equals(request.getServletPath())) {
-            HttpSession httpSession = request.getSession(false);
-            if (httpSession == null || httpSession.getAttribute("sessionToken") == null) {
-                response.sendRedirect("login.jsp");
-                return;
-            }
-            String sessionToken = (String) httpSession.getAttribute("sessionToken");
-            try {
-                ProfileDTO profile = new ProfileDTO();
-                profile.setEmail(request.getParameter("email"));
-                profile.setFirstName(request.getParameter("firstName"));
-                profile.setLastName(request.getParameter("lastName"));
-                profile.setPassword(request.getParameter("password"));
-                userSessionManager.updateProfile(profile, sessionToken);
-                response.sendRedirect("admin-profile");
-            } catch (UserException e) {
-                request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("profile.jsp").forward(request, response);
-            }
         }
     }
 }

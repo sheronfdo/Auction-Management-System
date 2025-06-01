@@ -11,7 +11,7 @@ import jakarta.ejb.Remote;
 public interface UserSessionManagerRemote {
     void register(UserDTO user) throws UserException;
     SessionDTO login(CredentialsDTO credentials) throws UserException;
-    void logout() throws UserException;
-    ProfileDTO getUserProfile() throws UserException;
-    void updateProfile(ProfileDTO profile) throws UserException;
+    void logout(String sessionToken) throws UserException;
+    ProfileDTO getUserProfile(String sessionToken) throws UserException;
+    void updateProfile(ProfileDTO profile, String sessionToken) throws UserException;
 }

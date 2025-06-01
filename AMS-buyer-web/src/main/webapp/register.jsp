@@ -17,9 +17,9 @@
   <label>Password: <input type="password" name="password" required></label><br>
   <label>First Name: <input type="text" name="firstName"></label><br>
   <label>Last Name: <input type="text" name="lastName"></label><br>
-  <label>Role:
-    <select name="role" required>
-      <option value="BUYER">Buyer</option>
+  <label hidden="hidden">Role:
+    <select name="role" required hidden="hidden">
+      <option value="BUYER" selected>Buyer</option>
       <option value="SELLER">Seller</option>
     </select>
   </label><br>

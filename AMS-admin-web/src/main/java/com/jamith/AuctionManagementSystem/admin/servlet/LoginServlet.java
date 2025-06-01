@@ -1,6 +1,7 @@
 package com.jamith.AuctionManagementSystem.admin.servlet;
 
 import com.jamith.AuctionManagementSystem.core.user.dto.CredentialsDTO;
+import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
 import com.jamith.AuctionManagementSystem.core.user.dto.SessionDTO;
 import com.jamith.AuctionManagementSystem.core.user.exception.UserException;
 import com.jamith.AuctionManagementSystem.core.user.remote.UserSessionManagerRemote;
@@ -10,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -27,19 +29,26 @@ public class LoginServlet extends HttpServlet {
                 credentials.setEmail(request.getParameter("email"));
                 credentials.setPassword(request.getParameter("password"));
                 SessionDTO session = userSessionManager.login(credentials);
-                request.getSession().setAttribute("sessionToken", session.getSessionToken());
-                String role = userSessionManager.getUserProfile().getRole();
-                if ("ADMIN".equals(role)) {
+                HttpSession httpSession = request.getSession();
+                httpSession.setAttribute("sessionToken", session.getSessionToken());
+                ProfileDTO profile = userSessionManager.getUserProfile(session.getSessionToken());
+                if ("ADMIN".equals(profile.getRole())) {
                     response.sendRedirect("dashboard");
                 } else {
-                    userSessionManager.logout();
-                    request.getSession().invalidate();
+                    userSessionManager.logout(session.getSessionToken());
+                    httpSession.invalidate();
                     request.setAttribute("error", "Access denied: Admin role required");
                     request.getRequestDispatcher("login.jsp").forward(request, response);
                 }
             } else if ("/logout".equals(path)) {
-                userSessionManager.logout();
-                request.getSession().invalidate();
+                HttpSession httpSession = request.getSession(false);
+                if (httpSession != null) {
+                    String sessionToken = (String) httpSession.getAttribute("sessionToken");
+                    if (sessionToken != null) {
+                        userSessionManager.logout(sessionToken);
+                    }
+                    httpSession.invalidate();
+                }
                 response.sendRedirect("login.jsp");
             }
         } catch (UserException e) {

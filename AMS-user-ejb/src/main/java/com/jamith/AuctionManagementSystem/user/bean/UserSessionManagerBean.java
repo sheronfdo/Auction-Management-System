@@ -21,12 +21,9 @@ import org.hibernate.query.Query;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDateTime;
-
-@Stateful
+@Stateless
 public class UserSessionManagerBean implements UserSessionManagerRemote {
     private static final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-    private UserEntity currentUser;
-    private SessionEntity currentSession;
 
     @PostConstruct
     public void init() {
@@ -77,68 +74,84 @@ public class UserSessionManagerBean implements UserSessionManagerRemote {
         try (Session session = sessionFactory.openSession()) {
             Query<UserEntity> query = session.createQuery("FROM UserEntity u WHERE u.email = :email", UserEntity.class);
             query.setParameter("email", credentials.getEmail());
-            UserEntity user = query.getSingleResult();
-            if (user == null || !BCrypt.checkpw(credentials.getPassword(), user.getPasswordHash())) {
+            UserEntity user;
+            try {
+                user = query.getSingleResult();
+            } catch (jakarta.persistence.NoResultException e) {
+                throw new UserException("User not found");
+            }
+            if (!BCrypt.checkpw(credentials.getPassword(), user.getPasswordHash())) {
                 throw new UserException("Invalid credentials");
             }
-            currentUser = user;
-            currentSession = new SessionEntity();
-            currentSession.setUser(user);
-            currentSession.setSessionToken(java.util.UUID.randomUUID().toString());
-            currentSession.setCreatedAt(LocalDateTime.now());
-            currentSession.setExpiresAt(LocalDateTime.now().plusMinutes(30));
+            SessionEntity sessionEntity = new SessionEntity();
+            sessionEntity.setUser(user);
+            sessionEntity.setSessionToken(java.util.UUID.randomUUID().toString());
+            sessionEntity.setCreatedAt(LocalDateTime.now());
+            sessionEntity.setExpiresAt(LocalDateTime.now().plusMinutes(30));
             session.beginTransaction();
-            session.persist(currentSession);
+            session.persist(sessionEntity);
             session.getTransaction().commit();
             SessionDTO dto = new SessionDTO();
-            dto.setSessionToken(currentSession.getSessionToken());
+            dto.setSessionToken(sessionEntity.getSessionToken());
             dto.setUserId(user.getUserId());
-            dto.setExpiry(currentSession.getExpiresAt());
+            dto.setExpiry(sessionEntity.getExpiresAt());
             return dto;
-        } catch (jakarta.persistence.NoResultException e) {
-            throw new UserException("User not found");
         }
     }
 
     @Override
-    public void logout() throws UserException {
-        if (currentSession == null) {
-            throw new UserException("Not logged in");
-        }
+    public void logout(String sessionToken) throws UserException {
         try (Session session = sessionFactory.openSession()) {
+            Query<SessionEntity> query = session.createQuery("FROM SessionEntity s WHERE s.sessionToken = :token AND s.expiresAt > :now", SessionEntity.class);
+            query.setParameter("token", sessionToken);
+            query.setParameter("now", LocalDateTime.now());
+            SessionEntity sessionEntity = query.uniqueResult();
+            if (sessionEntity == null) {
+                throw new UserException("Invalid or expired session");
+            }
             session.beginTransaction();
-            session.remove(session.merge(currentSession));
+            session.remove(sessionEntity);
             session.getTransaction().commit();
-            currentSession = null;
-            currentUser = null;
         }
     }
 
     @Override
-    public ProfileDTO getUserProfile() throws UserException {
-        if (currentUser == null) {
-            throw new UserException("Not logged in");
-        }
-        ProfileDTO profile = new ProfileDTO();
-        profile.setUserId(currentUser.getUserId());
-        profile.setEmail(currentUser.getEmail());
-        profile.setFirstName(currentUser.getFirstName());
-        profile.setLastName(currentUser.getLastName());
-        return profile;
-    }
-
-    @Override
-    public void updateProfile(ProfileDTO profile) throws UserException {
-        if (currentUser == null) {
-            throw new UserException("Not logged in");
-        }
+    public ProfileDTO getUserProfile(String sessionToken) throws UserException {
         try (Session session = sessionFactory.openSession()) {
+            Query<SessionEntity> query = session.createQuery("FROM SessionEntity s WHERE s.sessionToken = :token AND s.expiresAt > :now", SessionEntity.class);
+            query.setParameter("token", sessionToken);
+            query.setParameter("now", LocalDateTime.now());
+            SessionEntity sessionEntity = query.uniqueResult();
+            if (sessionEntity == null) {
+                throw new UserException("Invalid or expired session");
+            }
+            UserEntity user = sessionEntity.getUser();
+            ProfileDTO profile = new ProfileDTO();
+            profile.setUserId(user.getUserId());
+            profile.setEmail(user.getEmail());
+            profile.setFirstName(user.getFirstName());
+            profile.setLastName(user.getLastName());
+            profile.setRole(user.getRole());
+            return profile;
+        }
+    }
+
+    @Override
+    public void updateProfile(ProfileDTO profile, String sessionToken) throws UserException {
+        try (Session session = sessionFactory.openSession()) {
+            Query<SessionEntity> query = session.createQuery("FROM SessionEntity s WHERE s.sessionToken = :token AND s.expiresAt > :now", SessionEntity.class);
+            query.setParameter("token", sessionToken);
+            query.setParameter("now", LocalDateTime.now());
+            SessionEntity sessionEntity = query.uniqueResult();
+            if (sessionEntity == null) {
+                throw new UserException("Invalid or expired session");
+            }
+            UserEntity user = session.get(UserEntity.class, sessionEntity.getUser().getUserId(), org.hibernate.LockMode.OPTIMISTIC);
             session.beginTransaction();
-            UserEntity user = session.get(UserEntity.class, currentUser.getUserId(), org.hibernate.LockMode.OPTIMISTIC);
             if (profile.getEmail() != null && !profile.getEmail().equals(user.getEmail())) {
-                Query<UserEntity> query = session.createQuery("FROM UserEntity u WHERE u.email = :email", UserEntity.class);
-                query.setParameter("email", profile.getEmail());
-                if (!query.getResultList().isEmpty()) {
+                Query<UserEntity> emailQuery = session.createQuery("FROM UserEntity u WHERE u.email = :email", UserEntity.class);
+                emailQuery.setParameter("email", profile.getEmail());
+                if (!emailQuery.getResultList().isEmpty()) {
                     throw new UserException("Email already in use");
                 }
                 user.setEmail(profile.getEmail());
@@ -149,7 +162,6 @@ public class UserSessionManagerBean implements UserSessionManagerRemote {
             user.setUpdatedAt(LocalDateTime.now());
             session.merge(user);
             session.getTransaction().commit();
-            currentUser = user;
         } catch (org.hibernate.StaleObjectStateException e) {
             throw new UserException("Profile update failed due to concurrent modification");
         }
