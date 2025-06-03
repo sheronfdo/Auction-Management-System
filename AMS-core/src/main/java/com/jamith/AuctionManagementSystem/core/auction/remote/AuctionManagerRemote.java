@@ -11,6 +11,8 @@ import java.util.List;
 public interface AuctionManagerRemote {
     void createAuction(AuctionDTO auction, String sessionToken) throws AuctionException;
     void updateAuction(AuctionDTO auction, String sessionToken) throws AuctionException;
+    void deleteAuction(Long auctionId, String sessionToken) throws AuctionException;
+    List<AuctionSummaryDTO> listSellerAuctions(String sessionToken) throws AuctionException;
     void closeAuction(Long auctionId, String sessionToken) throws AuctionException;
     List<AuctionSummaryDTO> listActiveAuctions() throws AuctionException;
     AuctionDTO getAuctionDetails(Long auctionId) throws AuctionException;

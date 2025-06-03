@@ -18,4 +18,5 @@ public class AuctionSummaryDTO implements Serializable {
     private String itemName;
     private BigDecimal currentBid;
     private LocalDateTime endTime;
+    private String status;
 }

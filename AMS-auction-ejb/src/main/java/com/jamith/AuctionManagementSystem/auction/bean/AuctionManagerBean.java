@@ -106,6 +106,64 @@ public class AuctionManagerBean implements AuctionManagerRemote {
     }
 
     @Override
+    public void deleteAuction(Long auctionId, String sessionToken) throws AuctionException {
+        try {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"SELLER".equals(profile.getRole())) {
+                throw new AuctionException("Only sellers can delete auctions");
+            }
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                AuctionEntity entity = session.get(AuctionEntity.class, auctionId, org.hibernate.LockMode.OPTIMISTIC);
+                if (entity == null) {
+                    throw new AuctionException("Auction not found");
+                }
+                if (!entity.getSeller().getUserId().equals(profile.getUserId())) {
+                    throw new AuctionException("Not authorized to delete this auction");
+                }
+                if (!"PENDING".equals(entity.getStatus())) {
+                    throw new AuctionException("Only pending auctions can be deleted");
+                }
+                session.remove(entity);
+                session.getTransaction().commit();
+            } catch (org.hibernate.StaleObjectStateException e) {
+                throw new AuctionException("Auction deletion failed due to concurrent modification");
+            }
+        } catch (UserException e) {
+            throw new AuctionException("Invalid session: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<AuctionSummaryDTO> listSellerAuctions(String sessionToken) throws AuctionException {
+        try {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"SELLER".equals(profile.getRole())) {
+                throw new AuctionException("Only sellers can list their auctions");
+            }
+            try (Session session = sessionFactory.openSession()) {
+                Query<AuctionEntity> query = session.createQuery(
+                        "FROM AuctionEntity a WHERE a.seller.userId = :sellerId",
+                        AuctionEntity.class
+                );
+                query.setParameter("sellerId", profile.getUserId());
+                List<AuctionEntity> entities = query.getResultList();
+                return entities.stream().map(e -> {
+                    AuctionSummaryDTO dto = new AuctionSummaryDTO();
+                    dto.setAuctionId(e.getAuctionId());
+                    dto.setItemName(e.getItemName());
+                    dto.setCurrentBid(e.getCurrentBid() != null ? e.getCurrentBid() : e.getStartPrice());
+                    dto.setStatus(e.getStatus());
+                    dto.setEndTime(e.getEndTime());
+                    return dto;
+                }).collect(Collectors.toList());
+            }
+        } catch (UserException e) {
+            throw new AuctionException("Invalid session: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void closeAuction(Long auctionId, String sessionToken) throws AuctionException {
         try {
             ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
