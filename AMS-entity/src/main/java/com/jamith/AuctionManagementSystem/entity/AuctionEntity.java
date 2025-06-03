@@ -7,6 +7,7 @@ import org.hibernate.annotations.OptimisticLocking;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -58,4 +59,7 @@ public class AuctionEntity {
 
     @Version
     private Long version;
+
+    @OneToMany(mappedBy = "auction")
+    private List<BidEntity> bids;
 }

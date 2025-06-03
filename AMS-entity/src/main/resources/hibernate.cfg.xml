@@ -17,5 +17,6 @@
         <mapping class="com.jamith.AuctionManagementSystem.entity.UserEntity"/>
         <mapping class="com.jamith.AuctionManagementSystem.entity.SessionEntity"/>
         <mapping class="com.jamith.AuctionManagementSystem.entity.AuctionEntity"/>
+        <mapping class="com.jamith.AuctionManagementSystem.entity.BidEntity"/>
     </session-factory>
 </hibernate-configuration>
