@@ -16,9 +16,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
-@WebServlet({"/auctions", "/auction-details"})
+
+@WebServlet({"/auctions", "/auction-details", "/place-bid"})
 public class AuctionServlet extends HttpServlet {
     @EJB
     private UserSessionManagerRemote userSessionManager;
@@ -28,9 +30,9 @@ public class AuctionServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession httpSession = request.getSession();
+        HttpSession httpSession = request.getSession(false);
         if (httpSession == null || httpSession.getAttribute("sessionToken") == null) {
-            response.sendRedirect("http://localhost:8080/login.jsp");
+            response.sendRedirect("login.jsp");
             return;
         }
         String sessionToken = (String) httpSession.getAttribute("sessionToken");
@@ -41,7 +43,7 @@ public class AuctionServlet extends HttpServlet {
             if (!"BUYER".equals(profile.getRole())) {
                 userSessionManager.logout(sessionToken);
                 httpSession.invalidate();
-                response.sendRedirect("http://localhost:8080/login.jsp");
+                response.sendRedirect("login.jsp");
                 return;
             }
 
@@ -49,24 +51,51 @@ public class AuctionServlet extends HttpServlet {
                 List<AuctionSummaryDTO> auctions = auctionManager.listActiveAuctions();
                 request.setAttribute("auctions", auctions);
                 request.setAttribute("firstName", profile.getFirstName());
-                request.setAttribute("lastName", profile.getLastName());
                 request.getRequestDispatcher("auctions.jsp").forward(request, response);
             } else if ("/auction-details".equals(path)) {
                 Long auctionId = Long.parseLong(request.getParameter("auctionId"));
                 AuctionDTO auction = auctionManager.getAuctionDetails(auctionId);
-                request.setAttribute("auctionId", auction.getAuctionId());
-                request.setAttribute("itemName", auction.getItemName());
-                request.setAttribute("description", auction.getDescription());
-                request.setAttribute("startPrice", auction.getStartPrice());
-                request.setAttribute("bidIncrement", auction.getBidIncrement());
-                request.setAttribute("currentBid", auction.getCurrentBid());
-                request.setAttribute("status", auction.getStatus());
-                request.setAttribute("endTime", auction.getEndTime());
+                request.setAttribute("auction", auction);
                 request.getRequestDispatcher("auction-details.jsp").forward(request, response);
             }
-        } catch (UserException | AuctionException e) {
-            httpSession.invalidate();
-            response.sendRedirect("http://localhost:8080jsp");
+        } catch (UserException | AuctionException | NumberFormatException e) {
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession httpSession = request.getSession(false);
+        if (httpSession == null || httpSession.getAttribute("sessionToken") == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+        String sessionToken = (String) httpSession.getAttribute("sessionToken");
+        String path = request.getServletPath();
+
+        try {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"BUYER".equals(profile.getRole())) {
+                userSessionManager.logout(sessionToken);
+                httpSession.invalidate();
+                response.sendRedirect("login.jsp");
+                return;
+            }
+
+            if ("/place-bid".equals(path)) {
+                Long auctionId = Long.parseLong(request.getParameter("auctionId"));
+                String bidAmountStr = request.getParameter("bidAmount");
+                if (bidAmountStr == null || bidAmountStr.isEmpty()) {
+                    throw new AuctionException("Bid amount is required");
+                }
+                BigDecimal bidAmount = new BigDecimal(bidAmountStr);
+                auctionManager.placeBid(auctionId, bidAmount, sessionToken);
+                response.sendRedirect("auction-details?auctionId=" + auctionId);
+            }
+        } catch (UserException | AuctionException | NumberFormatException e) {
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 }

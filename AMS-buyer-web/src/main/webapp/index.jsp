@@ -6,11 +6,20 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    HttpSession httpSession = request.getSession(false);
+    String sessionToken = (httpSession != null) ? (String) httpSession.getAttribute("sessionToken") : null;
+    if (sessionToken == null) {
+        response.sendRedirect("login.jsp");
+    } else {
+        response.sendRedirect("dashboard.jsp");
+    }
+%>
 <html>
 <head>
-    <title>Title</title>
+    <title>Auction System</title>
 </head>
 <body>
-<h1>buyer web</h1>
+<!-- Redirecting... -->
 </body>
 </html>
