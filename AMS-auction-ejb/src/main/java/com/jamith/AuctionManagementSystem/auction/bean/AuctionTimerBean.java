@@ -15,25 +15,41 @@ import java.time.LocalDateTime;
 public class AuctionTimerBean {
     private static final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
-    @Schedule(hour = "*", minute = "*", second = "*/30", persistent = false)
-    public void checkExpiredAuctions() {
+    @Schedule(hour = "*", minute = "*/1", persistent = false) // Run every 1 minute
+    public void updateAuctionStatuses() {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            Query<AuctionEntity> query = session.createQuery(
-                "FROM AuctionEntity a WHERE a.status = :status AND a.endTime <= :now",
-                AuctionEntity.class
+
+            // PENDING -> ACTIVE
+            Query<AuctionEntity> activateQuery = session.createQuery(
+                    "FROM AuctionEntity a WHERE a.status = :status AND a.startTime <= :now AND a.endTime > :now",
+                    AuctionEntity.class
             );
-            query.setParameter("status", "ACTIVE");
-            query.setParameter("now", LocalDateTime.now());
-            for (AuctionEntity entity : query.getResultList()) {
+            activateQuery.setParameter("status", "PENDING");
+            activateQuery.setParameter("now", LocalDateTime.now());
+            for (AuctionEntity entity : activateQuery.getResultList()) {
+                entity.setStatus("ACTIVE");
+                entity.setUpdatedAt(LocalDateTime.now());
+                session.merge(entity);
+            }
+
+            // ACTIVE -> CLOSED
+            Query<AuctionEntity> closeQuery = session.createQuery(
+                    "FROM AuctionEntity a WHERE a.status = :status AND a.endTime <= :now",
+                    AuctionEntity.class
+            );
+            closeQuery.setParameter("status", "ACTIVE");
+            closeQuery.setParameter("now", LocalDateTime.now());
+            for (AuctionEntity entity : closeQuery.getResultList()) {
                 entity.setStatus("CLOSED");
                 entity.setUpdatedAt(LocalDateTime.now());
                 session.merge(entity);
                 // TODO: Publish JMS message to AuctionUpdatesTopic
             }
+
             session.getTransaction().commit();
         } catch (Exception e) {
-            // Log error, avoid interrupting timer
+            System.err.println("Failed to update auction statuses: " + e.getMessage());
         }
     }
 }

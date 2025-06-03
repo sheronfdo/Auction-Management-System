@@ -4,19 +4,23 @@ package com.jamith.AuctionManagementSystem.auction.bean;
 import com.jamith.AuctionManagementSystem.auction.util.HibernateUtil;
 import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionDTO;
 import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionSummaryDTO;
+import com.jamith.AuctionManagementSystem.core.auction.dto.BidDTO;
 import com.jamith.AuctionManagementSystem.core.auction.exception.AuctionException;
 import com.jamith.AuctionManagementSystem.core.auction.remote.AuctionManagerRemote;
 import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
 import com.jamith.AuctionManagementSystem.core.user.exception.UserException;
 import com.jamith.AuctionManagementSystem.core.user.remote.UserSessionManagerRemote;
 import com.jamith.AuctionManagementSystem.entity.AuctionEntity;
+import com.jamith.AuctionManagementSystem.entity.BidEntity;
 import com.jamith.AuctionManagementSystem.entity.UserEntity;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,13 +39,13 @@ public class AuctionManagerBean implements AuctionManagerRemote {
             if (!"SELLER".equals(profile.getRole())) {
                 throw new AuctionException("Only sellers can create auctions");
             }
-            if (auction.getItemName() == null || auction.getStartPrice() == null || 
-                auction.getBidIncrement() == null || auction.getStartTime() == null || 
-                auction.getEndTime() == null) {
+            if (auction.getItemName() == null || auction.getStartPrice() == null ||
+                    auction.getBidIncrement() == null || auction.getStartTime() == null ||
+                    auction.getEndTime() == null) {
                 throw new AuctionException("Required auction fields are missing");
             }
             if (auction.getStartTime().isBefore(LocalDateTime.now()) ||
-                auction.getEndTime().isBefore(auction.getStartTime())) {
+                    auction.getEndTime().isBefore(auction.getStartTime())) {
                 throw new AuctionException("Invalid start or end time");
             }
             try (Session session = sessionFactory.openSession()) {
@@ -196,8 +200,8 @@ public class AuctionManagerBean implements AuctionManagerRemote {
     public List<AuctionSummaryDTO> listActiveAuctions() throws AuctionException {
         try (Session session = sessionFactory.openSession()) {
             Query<AuctionEntity> query = session.createQuery(
-                "FROM AuctionEntity a WHERE a.status = :status AND a.startTime <= :now AND a.endTime > :now",
-                AuctionEntity.class
+                    "FROM AuctionEntity a WHERE a.status = :status AND a.startTime <= :now AND a.endTime > :now",
+                    AuctionEntity.class
             );
             query.setParameter("status", "ACTIVE");
             query.setParameter("now", LocalDateTime.now());
@@ -236,6 +240,72 @@ public class AuctionManagerBean implements AuctionManagerRemote {
             return dto;
         } catch (Exception e) {
             throw new AuctionException("Failed to retrieve auction details: " + e.getMessage());
+        }
+    }
+
+
+    @Override
+    public void placeBid(Long auctionId, BigDecimal bidAmount, String sessionToken) throws AuctionException {
+        try (Session session = sessionFactory.openSession()) {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"BUYER".equals(profile.getRole())) {
+                throw new AuctionException("Only buyers can place bids");
+            }
+            AuctionEntity auction = session.find(AuctionEntity.class, auctionId);
+            if (auction == null) {
+                throw new AuctionException("Auction not found");
+            }
+            if (!"ACTIVE".equals(auction.getStatus())) {
+                throw new AuctionException("Auction is not active");
+            }
+            if (LocalDateTime.now().isAfter(auction.getEndTime())) {
+                throw new AuctionException("Auction has ended");
+            }
+            BigDecimal minimumBid = auction.getCurrentBid() != null
+                    ? auction.getCurrentBid().add(auction.getBidIncrement())
+                    : auction.getStartPrice().add(auction.getBidIncrement());
+            if (bidAmount.compareTo(minimumBid) < 0) {
+                throw new AuctionException("Bid must be at least " + minimumBid);
+            }
+            UserEntity buyer = session.find(UserEntity.class, profile.getUserId());
+            BidEntity bid = new BidEntity();
+            bid.setAuction(auction);
+            bid.setBuyer(buyer);
+            bid.setBidAmount(bidAmount);
+            bid.setBidTime(LocalDateTime.now());
+            auction.setCurrentBid(bidAmount);
+            session.persist(bid);
+            session.merge(auction);
+        } catch (Exception e) {
+            throw new AuctionException("Failed to list auctions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<BidDTO> getBidHistory(String sessionToken) throws AuctionException {
+        try (Session session = sessionFactory.openSession()) {
+            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
+            if (!"BUYER".equals(profile.getRole())) {
+                throw new AuctionException("Only buyers can view bid history");
+            }
+            TypedQuery<BidEntity> query = session.createQuery(
+                    "SELECT b FROM BidEntity b WHERE b.buyer.userId = :buyerId ORDER BY b.bidTime DESC",
+                    BidEntity.class
+            );
+            query.setParameter("buyerId", profile.getUserId());
+            List<BidEntity> bids = query.getResultList();
+            return bids.stream().map(b -> {
+                BidDTO dto = new BidDTO();
+                dto.setBidId(b.getBidId());
+                dto.setAuctionId(b.getAuction().getAuctionId());
+                dto.setBuyerId(b.getBuyer().getUserId());
+                dto.setItemName(b.getAuction().getItemName());
+                dto.setBidAmount(b.getBidAmount());
+                dto.setBidTime(b.getBidTime());
+                return dto;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new AuctionException("Failed to list auctions: " + e.getMessage());
         }
     }
 }
