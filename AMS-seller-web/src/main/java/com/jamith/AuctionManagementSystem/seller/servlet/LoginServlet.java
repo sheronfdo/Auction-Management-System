@@ -15,6 +15,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+
+
 @WebServlet({"/login", "/register", "/logout"})
 public class LoginServlet extends HttpServlet {
     @EJB

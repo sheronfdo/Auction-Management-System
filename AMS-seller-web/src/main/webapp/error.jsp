@@ -1,15 +1,16 @@
 <%--
   Created by IntelliJ IDEA.
   User: jamith
-  Date: 5/31/25
-  Time: 9:03 PM
+  Date: 6/2/25
+  Time: 5:41 AM
   To change this template use File | Settings | File Templates.
 --%>
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-  <title>Seller Profile</title>
+  <title>Error</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
 </head>
@@ -42,29 +43,10 @@
   </div>
 </nav>
 <div class="container mt-4">
-  <h2>Seller Profile</h2>
-  <c:if test="${not empty error}">
-    <div class="alert alert-danger">${error}</div>
-  </c:if>
-  <form action="seller-profile" method="post">
-    <div class="mb-3">
-      <label for="email" class="form-label">Email</label>
-      <input type="email" class="form-control" id="email" name="email" value="${email}" required>
-    </div>
-    <div class="mb-3">
-      <label for="firstName" class="form-label">First Name</label>
-      <input type="text" class="form-control" id="firstName" name="firstName" value="${firstName}">
-    </div>
-    <div class="mb-3">
-      <label for="lastName" class="form-label">Last Name</label>
-      <input type="text" class="form-control" id="lastName" name="lastName" value="${lastName}">
-    </div>
-    <div class="mb-3">
-      <label for="password" class="form-label">New Password (leave blank to keep current)</label>
-      <input type="password" class="form-control" id="password" name="password">
-    </div>
-    <button type="submit" class="btn btn-primary">Update Profile</button>
-  </form>
+  <h2>Error</h2>
+  <div class="alert alert-danger">${error}</div>
+  <a href="dashboard.jsp" class="btn btn-primary">Back to Dashboard</a>
+  <a href="list-auctions" class="btn btn-secondary">View Auctions</a>
 </div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
               integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
               crossorigin="anonymous"></script></body>

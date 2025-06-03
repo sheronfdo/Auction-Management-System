@@ -21,4 +21,7 @@
 <!--        <servlet-name>ProfileServlet</servlet-name>-->
 <!--        <url-pattern>/buyer-profile</url-pattern>-->
 <!--    </servlet-mapping>-->
+    <session-config>
+        <session-timeout>600</session-timeout>
+    </session-config>
 </web-app>
