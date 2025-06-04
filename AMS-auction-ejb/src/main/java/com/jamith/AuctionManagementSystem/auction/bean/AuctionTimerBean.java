@@ -20,6 +20,7 @@ public class AuctionTimerBean {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
 
+            System.out.println("Updating auction statuses..."+LocalDateTime.now());
             // PENDING -> ACTIVE
             Query<AuctionEntity> activateQuery = session.createQuery(
                     "FROM AuctionEntity a WHERE a.status = :status AND a.startTime <= :now AND a.endTime > :now",
