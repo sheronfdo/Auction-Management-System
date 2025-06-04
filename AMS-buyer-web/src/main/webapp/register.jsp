@@ -47,7 +47,7 @@
     <c:if test="${not empty error}">
         <div class="alert alert-danger">${error}</div>
     </c:if>
-    <form action="buyer-profile" method="post">
+    <form action="register" method="post">
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
             <input type="email" class="form-control" id="email" name="email" value="${email}" required>
@@ -64,7 +64,8 @@
             <label for="password" class="form-label">New Password (leave blank to keep current)</label>
             <input type="password" class="form-control" id="password" name="password">
         </div>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <input type="hidden" name="role" value="BUYER">
+        <button type="submit" class="btn btn-primary">Register</button>
     </form>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"

@@ -91,9 +91,13 @@
 </div>
 <c:if test="${not empty auction}">
     <script>
-        const auctionId = ${auction.auctionId};
+        const auctionId = "${auction.auctionId}";
+        if (!auctionId) {
+            console.error('Auction ID is undefined');
+            throw new Error('Failed to initialize WebSocket: Invalid auctionId');
+        }
         console.log('Connecting WebSocket for auctionId: ' + auctionId);
-        const wsUrl = `ws://localhost:8080/buyer/ws/bid-updates/${auctionId}`;
+        const wsUrl = `ws://localhost:8080/buyer/ws/bid-updates/`+auctionId;
         console.log('WebSocket URL: ' + wsUrl);
         const ws = new WebSocket(wsUrl);
 
@@ -116,11 +120,11 @@
                 const tbody = document.getElementById('bidTableBody');
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                <td>${bid.bidId}</td>
-                <td>${bid.buyerId}</td>
-                <td>$${bid.bidAmount.toFixed(2)}</td>
-                <td>${bid.bidTime}</td>
-            `;
+                    <td>${bid.bidId}</td>
+                    <td>${bid.buyerId}</td>
+                    <td>$${bid.bidAmount.toFixed(2)}</td>
+                    <td>${bid.bidTime}</td>
+                `;
                 tbody.prepend(row);
             } catch (e) {
                 console.error('Error parsing WebSocket message: ', e);
