@@ -13,13 +13,16 @@ import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Stateless;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Stateless
 public class UserSessionManagerBean implements UserSessionManagerRemote {
+
     private static final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     @PostConstruct
@@ -161,6 +164,128 @@ public class UserSessionManagerBean implements UserSessionManagerRemote {
             session.getTransaction().commit();
         } catch (org.hibernate.StaleObjectStateException e) {
             throw new UserException("Profile update failed due to concurrent modification");
+        }
+    }
+
+    @Override
+    public List<ProfileDTO> getAllUsers() throws UserException {
+        try (Session session = sessionFactory.openSession()) {
+            Query<UserEntity> query = session.createQuery("FROM UserEntity u ORDER BY u.createdAt DESC", UserEntity.class);
+            List<UserEntity> users = query.getResultList();
+            return users.stream().map(u -> {
+                ProfileDTO dto = new ProfileDTO();
+                dto.setUserId(u.getUserId());
+                dto.setEmail(u.getEmail());
+                dto.setFirstName(u.getFirstName());
+                dto.setLastName(u.getLastName());
+                dto.setRole(u.getRole());
+                dto.setActive(u.isActive());
+                return dto;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new UserException("Failed to retrieve users: " + e.getMessage());
+        }
+    }
+
+
+
+    @Override
+    public ProfileDTO getUserProfileById(String userId, String sessionToken) throws UserException {
+        try (Session session = sessionFactory.openSession()) {
+            // Validate session and admin role
+            Query<SessionEntity> sessionQuery = session.createQuery("FROM SessionEntity s WHERE s.sessionToken = :token AND s.expiresAt > :now", SessionEntity.class);
+            sessionQuery.setParameter("token", sessionToken);
+            sessionQuery.setParameter("now", LocalDateTime.now());
+            SessionEntity sessionEntity = sessionQuery.uniqueResult();
+            if (sessionEntity == null) {
+                throw new UserException("Invalid or expired session");
+            }
+            if (!"ADMIN".equals(sessionEntity.getUser().getRole())) {
+                throw new UserException("Admin role required");
+            }
+            // Fetch user
+            UserEntity user = session.get(UserEntity.class, userId);
+            if (user == null) {
+                throw new UserException("User not found: " + userId);
+            }
+            ProfileDTO profile = new ProfileDTO();
+            profile.setUserId(user.getUserId());
+            profile.setEmail(user.getEmail());
+            profile.setFirstName(user.getFirstName());
+            profile.setLastName(user.getLastName());
+            profile.setRole(user.getRole());
+            profile.setActive(user.isActive());
+            return profile;
+        } catch (Exception e) {
+            throw new UserException("Failed to retrieve user profile: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void suspendUser(String userId, String sessionToken) throws UserException {
+        try (Session session = sessionFactory.openSession()) {
+            // Validate session and admin role
+            Query<SessionEntity> sessionQuery = session.createQuery("FROM SessionEntity s WHERE s.sessionToken = :token AND s.expiresAt > :now", SessionEntity.class);
+            sessionQuery.setParameter("token", sessionToken);
+            sessionQuery.setParameter("now", LocalDateTime.now());
+            SessionEntity sessionEntity = sessionQuery.uniqueResult();
+            if (sessionEntity == null) {
+                throw new UserException("Invalid or expired session");
+            }
+            if (!"ADMIN".equals(sessionEntity.getUser().getRole())) {
+                throw new UserException("Admin role required");
+            }
+            // Update user status
+            UserEntity user = session.get(UserEntity.class, userId, org.hibernate.LockMode.OPTIMISTIC);
+            if (user == null) {
+                throw new UserException("User not found: " + userId);
+            }
+            if (!user.isActive()) {
+                throw new UserException("User is already suspended");
+            }
+            session.beginTransaction();
+            user.setActive(false);
+            user.setUpdatedAt(LocalDateTime.now());
+            session.merge(user);
+            session.getTransaction().commit();
+        } catch (org.hibernate.StaleObjectStateException e) {
+            throw new UserException("User suspension failed due to concurrent modification");
+        } catch (Exception e) {
+            throw new UserException("Failed to suspend user: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void activateUser(String userId, String sessionToken) throws UserException {
+        try (Session session = sessionFactory.openSession()) {
+            // Validate session and admin role
+            Query<SessionEntity> sessionQuery = session.createQuery("FROM SessionEntity s WHERE s.sessionToken = :token AND s.expiresAt > :now", SessionEntity.class);
+            sessionQuery.setParameter("token", sessionToken);
+            sessionQuery.setParameter("now", LocalDateTime.now());
+            SessionEntity sessionEntity = sessionQuery.uniqueResult();
+            if (sessionEntity == null) {
+                throw new UserException("Invalid or expired session");
+            }
+            if (!"ADMIN".equals(sessionEntity.getUser().getRole())) {
+                throw new UserException("Admin role required");
+            }
+            // Update user status
+            UserEntity user = session.get(UserEntity.class, userId, org.hibernate.LockMode.OPTIMISTIC);
+            if (user == null) {
+                throw new UserException("User not found: " + userId);
+            }
+            if (user.isActive()) {
+                throw new UserException("User is already active");
+            }
+            session.beginTransaction();
+            user.setActive(true);
+            user.setUpdatedAt(LocalDateTime.now());
+            session.merge(user);
+            session.getTransaction().commit();
+        } catch (org.hibernate.StaleObjectStateException e) {
+            throw new UserException("User activation failed due to concurrent modification");
+        } catch (Exception e) {
+            throw new UserException("Failed to activate user: " + e.getMessage());
         }
     }
 }
