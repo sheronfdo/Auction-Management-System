@@ -387,4 +387,72 @@ public class AuctionManagerBean implements AuctionManagerRemote {
             throw new AuctionException("Failed to list auctions: " + e.getMessage());
         }
     }
+
+
+
+    // New methods
+    @Override
+    public List<AuctionDTO> getAllAuctions() throws AuctionException {
+        try (Session session = sessionFactory.openSession()) {
+            Query<AuctionEntity> query = session.createQuery("FROM AuctionEntity a ORDER BY a.createdAt DESC", AuctionEntity.class
+            );
+            List<AuctionEntity> auctionEntities = query.getResultList();
+            return auctionEntities.stream().map(this::mapToAuctionDTO).map(e -> {
+                AuctionDTO dto = new AuctionDTO();
+                dto.setAuctionId(e.getAuctionId());
+                dto.setSellerId(e.getSellerId());
+                dto.setItemName(e.getItemName());
+                dto.setDescription(dto.getDescription());
+                dto.setStartPrice(e.getStartPrice());
+                dto.setBidIncrement(e.getBidIncrement());
+                dto.setCurrentBid(e.getCurrentBid());
+                dto.setStatus(e.getStatus());
+                dto.setStartTime(e.getStartTime());
+                dto.setEndTime(e.getEndTime());
+                return dto;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new AuctionException("Failed to retrieve auctions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<BidDTO> getBidsForAuction(Long auctionId) throws AuctionException {
+        try (Session session = sessionFactory.openSession()) {
+            AuctionEntity auction = session.get(AuctionEntity.class, auctionId);
+            if (auction == null) {
+                throw new AuctionException("Auction not found: " + auctionId);
+            }
+            Query<BidEntity> query = session.createQuery("SELECT b FROM BidEntity b WHERE b.auction.auctionId = :auctionId ORDER BY b.bidTime DESC", BidEntity.class);
+            query.setParameter("auctionId", auctionId);
+            List<BidEntity> bids = query.getResultList();
+            return bids.stream().map(b -> {
+                BidDTO dto = new BidDTO();
+                dto.setBidId(b.getBidId());
+                dto.setAuctionId(b.getAuction().getAuctionId());
+                dto.setBuyerId(b.getBuyer().getUserId());
+                dto.setItemName(b.getAuction().getItemName());
+                dto.setBidAmount(b.getBidAmount());
+                dto.setBidTime(b.getBidTime());
+                return dto;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new AuctionException("Failed to retrieve bids for auction: " + auctionId + ": " + e.getMessage());
+        }
+    }
+
+    private AuctionDTO mapToAuctionDTO(AuctionEntity entity) {
+        AuctionDTO dto = new AuctionDTO();
+        dto.setAuctionId(entity.getAuctionId());
+        dto.setSellerId(entity.getSeller().getUserId());
+        dto.setItemName(entity.getItemName());
+        dto.setDescription(entity.getDescription());
+        dto.setStartPrice(entity.getStartPrice());
+        dto.setBidIncrement(entity.getBidIncrement());
+        dto.setCurrentBid(entity.getCurrentBid());
+        dto.setStatus(entity.getStatus());
+        dto.setStartTime(entity.getStartTime());
+        dto.setEndTime(entity.getEndTime());
+        return dto;
+    }
 }
