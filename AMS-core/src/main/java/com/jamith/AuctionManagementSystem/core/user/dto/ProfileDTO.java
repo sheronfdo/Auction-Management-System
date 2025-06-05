@@ -16,4 +16,5 @@ public class ProfileDTO implements Serializable {
     private String lastName;
     private String password;
     private String role;
+    private Boolean active;
 }

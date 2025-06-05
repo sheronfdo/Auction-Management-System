@@ -20,4 +20,6 @@ public interface AuctionManagerRemote {
     AuctionDTO getAuctionDetails(Long auctionId) throws AuctionException;
     void placeBid(Long auctionId, BigDecimal bidAmount, String sessionToken) throws AuctionException;
     List<BidDTO> getBidHistory(String sessionToken) throws AuctionException;
+    List<BidDTO> getBidsForAuction(Long auctionId) throws AuctionException;
+    List<AuctionDTO> getAllAuctions() throws AuctionException;
 }
