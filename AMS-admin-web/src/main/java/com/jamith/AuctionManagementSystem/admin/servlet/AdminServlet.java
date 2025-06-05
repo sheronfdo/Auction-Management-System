@@ -1,5 +1,8 @@
 package com.jamith.AuctionManagementSystem.admin.servlet;
 
+import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionDTO;
+import com.jamith.AuctionManagementSystem.core.auction.exception.AuctionException;
+import com.jamith.AuctionManagementSystem.core.auction.remote.AuctionManagerRemote;
 import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
 import com.jamith.AuctionManagementSystem.core.user.exception.UserException;
 import com.jamith.AuctionManagementSystem.core.user.remote.UserSessionManagerRemote;
@@ -12,11 +15,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.util.List;
 
-@WebServlet({"/dashboard", "/admin-profile"})
+
+@WebServlet({"/dashboard", "/admin-profile", "/users"})
 public class AdminServlet extends HttpServlet {
     @EJB
     private UserSessionManagerRemote userSessionManager;
+
+    @EJB
+    private AuctionManagerRemote auctionManager;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -38,9 +46,20 @@ public class AdminServlet extends HttpServlet {
             request.setAttribute("email", profile.getEmail());
             request.setAttribute("firstName", profile.getFirstName());
             request.setAttribute("lastName", profile.getLastName());
-            String jsp = "/admin-profile".equals(path) ? "profile.jsp" : "dashboard.jsp";
+            String jsp;
+            if ("/dashboard".equals(path)) {
+                List<AuctionDTO> auctions = auctionManager.getAllAuctions();
+                request.setAttribute("auctions", auctions);
+                jsp = "dashboard.jsp";
+            } else if ("/users".equals(path)) {
+                List<ProfileDTO> users = userSessionManager.getAllUsers();
+                request.setAttribute("users", users);
+                jsp = "users.jsp";
+            } else {
+                jsp = "profile.jsp";
+            }
             request.getRequestDispatcher(jsp).forward(request, response);
-        } catch (UserException e) {
+        } catch (UserException | AuctionException e) {
             httpSession.invalidate();
             response.sendRedirect("login.jsp");
         }

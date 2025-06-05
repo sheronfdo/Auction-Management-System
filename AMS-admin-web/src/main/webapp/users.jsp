@@ -1,16 +1,15 @@
 <%--
   Created by IntelliJ IDEA.
   User: jamith
-  Date: 5/31/25
-  Time: 7:54 PM
+  Date: 6/5/25
+  Time: 6:18 AM
   To change this template use File | Settings | File Templates.
 --%>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <title>Admin Profile</title>
+    <title>Manage Users</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -30,10 +29,10 @@
                     <a class="nav-link" href="create-auction">Create Auction</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="users">Manage Users</a>
+                    <a class="nav-link active" href="users">Manage Users</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="admin-profile">Profile</a>
+                    <a class="nav-link" href="admin-profile">Profile</a>
                 </li>
             </ul>
             <form class="d-flex" action="logout" method="post">
@@ -43,30 +42,39 @@
     </div>
 </nav>
 <div class="container mt-4">
-    <h2>Admin Profile</h2>
+    <h2>Manage Users</h2>
     <c:if test="${not empty error}">
         <div class="alert alert-danger">${error}</div>
     </c:if>
-    <form action="admin-profile" method="post">
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="${email}" required>
-        </div>
-        <div class="mb-3">
-            <label for="firstName" class="form-label">First Name</label>
-            <input type="text" class="form-control" id="firstName" name="firstName" value="${firstName}" required>
-        </div>
-        <div class="mb-3">
-            <label for="lastName" class="form-label">Last Name</label>
-            <input type="text" class="form-control" id="lastName" name="lastName" value="${lastName}" required>
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">New Password (leave blank to keep current)</label>
-            <input type="password" class="form-control" id="password" name="password">
-        </div>
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-        <a href="dashboard" class="btn btn-secondary">Cancel</a>
-    </form>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>User ID</th>
+            <th>Email</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <c:forEach var="user" items="${users}">
+            <tr>
+                <td>${user.userId}</td>
+                <td>${user.email}</td>
+                <td>${user.firstName}</td>
+                <td>${user.lastName}</td>
+                <td>${user.role}</td>
+                <td>${user.active ? 'Active' : 'Suspended'}</td>
+                <td>
+                    <a href="user-details?userId=${user.userId}" class="btn btn-sm btn-info">View</a>
+                </td>
+            </tr>
+        </c:forEach>
+        </tbody>
+    </table>
+    <a href="dashboard" class="btn btn-secondary mt-3">Back to Dashboard</a>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

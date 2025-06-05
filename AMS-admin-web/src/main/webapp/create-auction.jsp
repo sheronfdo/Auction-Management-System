@@ -1,16 +1,15 @@
 <%--
   Created by IntelliJ IDEA.
   User: jamith
-  Date: 5/31/25
-  Time: 7:54 PM
+  Date: 6/5/25
+  Time: 6:16 AM
   To change this template use File | Settings | File Templates.
 --%>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <title>Admin Profile</title>
+    <title>Create Auction</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -27,13 +26,13 @@
                     <a class="nav-link" href="dashboard">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="create-auction">Create Auction</a>
+                    <a class="nav-link active" href="create-auction">Create Auction</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="users">Manage Users</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="admin-profile">Profile</a>
+                    <a class="nav-link" href="admin-profile">Profile</a>
                 </li>
             </ul>
             <form class="d-flex" action="logout" method="post">
@@ -43,28 +42,32 @@
     </div>
 </nav>
 <div class="container mt-4">
-    <h2>Admin Profile</h2>
+    <h2>Create Auction</h2>
     <c:if test="${not empty error}">
         <div class="alert alert-danger">${error}</div>
     </c:if>
-    <form action="admin-profile" method="post">
+    <form action="create-auction" method="post">
         <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="${email}" required>
+            <label for="itemName" class="form-label">Item Name</label>
+            <input type="text" class="form-control" id="itemName" name="itemName" required>
         </div>
         <div class="mb-3">
-            <label for="firstName" class="form-label">First Name</label>
-            <input type="text" class="form-control" id="firstName" name="firstName" value="${firstName}" required>
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" required></textarea>
         </div>
         <div class="mb-3">
-            <label for="lastName" class="form-label">Last Name</label>
-            <input type="text" class="form-control" id="lastName" name="lastName" value="${lastName}" required>
+            <label for="startPrice" class="form-label">Start Price ($)</label>
+            <input type="number" step="0.01" class="form-control" id="startPrice" name="startPrice" required>
         </div>
         <div class="mb-3">
-            <label for="password" class="form-label">New Password (leave blank to keep current)</label>
-            <input type="password" class="form-control" id="password" name="password">
+            <label for="bidIncrement" class="form-label">Bid Increment ($)</label>
+            <input type="number" step="0.01" class="form-control" id="bidIncrement" name="bidIncrement" required>
         </div>
-        <button type="submit" class="btn btn-primary">Update Profile</button>
+        <div class="mb-3">
+            <label for="endTime" class="form-label">End Time</label>
+            <input type="datetime-local" class="form-control" id="endTime" name="endTime" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Auction</button>
         <a href="dashboard" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

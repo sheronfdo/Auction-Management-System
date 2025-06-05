@@ -1,16 +1,15 @@
 <%--
   Created by IntelliJ IDEA.
   User: jamith
-  Date: 6/1/25
-  Time: 9:24 AM
+  Date: 6/5/25
+  Time: 6:18 AM
   To change this template use File | Settings | File Templates.
 --%>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-  <title>Close Auction</title>
+  <title>User Details</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -43,18 +42,33 @@
   </div>
 </nav>
 <div class="container mt-4">
-  <h2>Close Auction</h2>
+  <h2>User Details</h2>
   <c:if test="${not empty error}">
     <div class="alert alert-danger">${error}</div>
   </c:if>
-  <form action="close-auction" method="post">
-    <div class="mb-3">
-      <label for="auctionId" class="form-label">Auction ID</label>
-      <input type="number" class="form-control" id="auctionId" name="auctionId" required>
+  <c:if test="${not empty userProfile}">
+    <div class="card">
+      <div class="card-body">
+        <h3>${userProfile.firstName} ${userProfile.lastName}</h3>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item"><strong>User ID:</strong> ${userProfile.userId}</li>
+        <li class="list-group-item"><strong>Email:</strong> ${userProfile.email}</li>
+        <li class="list-group-item"><strong>Role:</strong> ${userProfile.role}</li>
+        <li class="list-group-item"><strong>Status:</strong> ${userProfile.active ? 'Active' : 'Suspended'}</li>
+      </ul>
+      <div class="card-body">
+        <form action="user-details" method="post" style="display:inline;">
+          <input type="hidden" name="userId" value="${userProfile.userId}">
+          <input type="hidden" name="action" value="${userProfile.active ? 'suspend' : 'activate'}">
+          <button type="submit" class="btn btn-sm ${userProfile.active ? 'btn-warning' : 'btn-success'}">
+              ${userProfile.active ? 'Suspend' : 'Activate'}
+          </button>
+        </form>
+        <a href="users" class="btn btn-sm btn-secondary">Back to Users</a>
+      </div>
     </div>
-    <button type="submit" class="btn btn-primary">Close Auction</button>
-    <a href="dashboard" class="btn btn-secondary">Cancel</a>
-  </form>
+  </c:if>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

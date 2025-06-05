@@ -1,16 +1,15 @@
 <%--
   Created by IntelliJ IDEA.
   User: jamith
-  Date: 5/31/25
-  Time: 7:54 PM
+  Date: 6/5/25
+  Time: 6:17 AM
   To change this template use File | Settings | File Templates.
 --%>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <title>Admin Profile</title>
+    <title>Auction Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -33,7 +32,7 @@
                     <a class="nav-link" href="users">Manage Users</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="admin-profile">Profile</a>
+                    <a class="nav-link" href="admin-profile">Profile</a>
                 </li>
             </ul>
             <form class="d-flex" action="logout" method="post">
@@ -43,30 +42,47 @@
     </div>
 </nav>
 <div class="container mt-4">
-    <h2>Admin Profile</h2>
+    <h2>Auction Details</h2>
     <c:if test="${not empty error}">
         <div class="alert alert-danger">${error}</div>
     </c:if>
-    <form action="admin-profile" method="post">
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="${email}" required>
+    <c:if test="${not empty auction}">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">${auction.itemName}</h3>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Description:</strong> ${auction.description}</li>
+                <li class="list-group-item"><strong>Start Price:</strong> $${auction.startPrice}</li>
+                <li class="list-group-item"><strong>Bid Increment:</strong> $${auction.bidIncrement}</li>
+                <li class="list-group-item"><strong>Current Bid:</strong> $${auction.currentBid != null ? auction.currentBid : auction.startPrice}</li>
+                <li class="list-group-item"><strong>Status:</strong> ${auction.status}</li>
+                <li class="list-group-item"><strong>End Time:</strong> ${auction.endTime}</li>
+            </ul>
         </div>
-        <div class="mb-3">
-            <label for="firstName" class="form-label">First Name</label>
-            <input type="text" class="form-control" id="firstName" name="firstName" value="${firstName}" required>
-        </div>
-        <div class="mb-3">
-            <label for="lastName" class="form-label">Last Name</label>
-            <input type="text" class="form-control" id="lastName" name="lastName" value="${lastName}" required>
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">New Password (leave blank to keep current)</label>
-            <input type="password" class="form-control" id="password" name="password">
-        </div>
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-        <a href="dashboard" class="btn btn-secondary">Cancel</a>
-    </form>
+        <h4 class="mt-4">Bid History</h4>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Bid ID</th>
+                <th>Buyer ID</th>
+                <th>Amount</th>
+                <th>Time</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:forEach var="bid" items="${bids}">
+                <tr>
+                    <td>${bid.bidId}</td>
+                    <td>${bid.buyerId}</td>
+                    <td>$${bid.bidAmount}</td>
+                    <td>${bid.bidTime}</td>
+                </tr>
+            </c:forEach>
+            </tbody>
+        </table>
+        <a href="dashboard" class="btn btn-secondary mt-3">Back to Dashboard</a>
+    </c:if>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
