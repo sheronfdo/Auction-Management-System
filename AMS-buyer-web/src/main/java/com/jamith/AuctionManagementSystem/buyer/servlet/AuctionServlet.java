@@ -2,6 +2,7 @@ package com.jamith.AuctionManagementSystem.buyer.servlet;
 
 import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionDTO;
 import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionSummaryDTO;
+import com.jamith.AuctionManagementSystem.core.auction.dto.BidDTO;
 import com.jamith.AuctionManagementSystem.core.auction.exception.AuctionException;
 import com.jamith.AuctionManagementSystem.core.auction.remote.AuctionManagerRemote;
 import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
@@ -55,7 +56,9 @@ public class AuctionServlet extends HttpServlet {
             } else if ("/auction-details".equals(path)) {
                 Long auctionId = Long.parseLong(request.getParameter("auctionId"));
                 AuctionDTO auction = auctionManager.getAuctionDetails(auctionId);
+                List<BidDTO> bids = auctionManager.getBidsForAuction(auctionId);
                 request.setAttribute("auction", auction);
+                request.setAttribute("bids", bids);
                 request.getRequestDispatcher("auction-details.jsp").forward(request, response);
             }
         } catch (UserException | AuctionException | NumberFormatException e) {

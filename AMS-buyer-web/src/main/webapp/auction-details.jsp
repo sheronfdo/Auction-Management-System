@@ -84,7 +84,25 @@
                 <th>Time</th>
             </tr>
             </thead>
-            <tbody id="bidTableBody"></tbody>
+            <tbody id="bidTableBody">
+            <c:choose>
+                <c:when test="${empty bids}">
+                    <tr id="noBidsRow">
+                        <td colspan="4" class="text-center">No bids have been placed on this auction.</td>
+                    </tr>
+                </c:when>
+                <c:otherwise>
+                    <c:forEach var="bid" items="${bids}">
+                        <tr>
+                            <td>${bid.bidId}</td>
+                            <td>${bid.buyerId}</td>
+                            <td>$${bid.bidAmount}</td>
+                            <td>${bid.bidTime}</td>
+                        </tr>
+                    </c:forEach>
+                </c:otherwise>
+            </c:choose>
+            </tbody>
         </table>
         <a href="auctions" class="btn btn-secondary mt-3">Back to Auctions</a>
     </c:if>
