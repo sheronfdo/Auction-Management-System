@@ -55,6 +55,7 @@
             <th>Item Name</th>
             <th>Status</th>
             <th>Current Bid</th>
+            <th>Start Time</th>
             <th>End Time</th>
             <th>Actions</th>
         </tr>
@@ -66,6 +67,7 @@
                 <td>${auction.itemName}</td>
                 <td>${auction.status}</td>
                 <td>$${auction.currentBid != null ? auction.currentBid : auction.startPrice}</td>
+                <td>${auction.startTime}</td>
                 <td>${auction.endTime}</td>
                 <td>
                     <a href="auction-details?auctionId=${auction.auctionId}" class="btn btn-sm btn-info">View</a>

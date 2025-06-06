@@ -89,6 +89,7 @@ public class AuctionServlet extends HttpServlet {
                 auction.setDescription(request.getParameter("description"));
                 auction.setStartPrice(new BigDecimal(request.getParameter("startPrice")));
                 auction.setBidIncrement(new BigDecimal(request.getParameter("bidIncrement")));
+                auction.setStartTime(LocalDateTime.parse(request.getParameter("startTime"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
                 auction.setEndTime(LocalDateTime.parse(request.getParameter("endTime"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
                 auctionManager.createAuction(auction, sessionToken);
                 response.sendRedirect("dashboard");

@@ -64,6 +64,10 @@
             <input type="number" step="0.01" class="form-control" id="bidIncrement" name="bidIncrement" required>
         </div>
         <div class="mb-3">
+            <label for="startTime" class="form-label">Start Time</label>
+            <input type="datetime-local" class="form-control" id="startTime" name="startTime" required>
+        </div>
+        <div class="mb-3">
             <label for="endTime" class="form-label">End Time</label>
             <input type="datetime-local" class="form-control" id="endTime" name="endTime" required>
         </div>
