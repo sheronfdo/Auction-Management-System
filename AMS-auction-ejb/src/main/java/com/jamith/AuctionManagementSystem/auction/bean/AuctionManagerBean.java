@@ -47,8 +47,8 @@ public class AuctionManagerBean implements AuctionManagerRemote {
     public void createAuction(AuctionDTO auction, String sessionToken) throws AuctionException {
         try {
             ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
-            if (!"SELLER".equals(profile.getRole())) {
-                throw new AuctionException("Only sellers can create auctions");
+            if ("BUYER".equals(profile.getRole())) {
+                throw new AuctionException("Only admin or sellers can create auctions");
             }
             if (auction.getItemName() == null || auction.getStartPrice() == null ||
                     auction.getBidIncrement() == null || auction.getStartTime() == null ||

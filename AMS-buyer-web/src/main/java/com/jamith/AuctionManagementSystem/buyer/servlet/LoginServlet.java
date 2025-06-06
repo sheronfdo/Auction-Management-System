@@ -23,6 +23,27 @@ public class LoginServlet extends HttpServlet {
     private UserSessionManagerRemote userSessionManager;
 
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String path = request.getServletPath();
+        try {
+            if ("/logout".equals(path)) {
+                HttpSession httpSession = request.getSession(false);
+                if (httpSession != null) {
+                    String sessionToken = (String) httpSession.getAttribute("sessionToken");
+                    if (sessionToken != null) {
+                        userSessionManager.logout(sessionToken);
+                    }
+                    httpSession.invalidate();
+                }
+                response.sendRedirect("login.jsp");
+            }
+        } catch (UserException e) {
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher(path.substring(1) + ".jsp").forward(request, response);
+        }
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String path = request.getServletPath();
         try {

@@ -117,15 +117,15 @@
                     minBidSpan.textContent = newMin;
                     bidInput.min = newMin;
                 }
-                const tbody = document.getElementById('bidTableBody');
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${bid.bidId}</td>
-                    <td>${bid.buyerId}</td>
-                    <td>$${bid.bidAmount.toFixed(2)}</td>
-                    <td>${bid.bidTime}</td>
-                `;
-                tbody.prepend(row);
+                <%--const tbody = document.getElementById('bidTableBody');--%>
+                <%--const row = document.createElement('tr');--%>
+                <%--row.innerHTML = `--%>
+                <%--    <td>${bid.bidId}</td>--%>
+                <%--    <td>${bid.buyerId}</td>--%>
+                <%--    <td>$${bid.bidAmount.toFixed(2)}</td>--%>
+                <%--    <td>${bid.bidTime}</td>--%>
+                <%--`;--%>
+                <%--tbody.prepend(row);--%>
             } catch (e) {
                 console.error('Error parsing WebSocket message: ', e);
             }
