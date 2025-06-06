@@ -10,8 +10,6 @@
     <name>AuctionManagementSystem</name>
     <modules>
         <module>AMS-core</module>
-        <!--        <module>AMS-web</module>-->
-        <!--        <module>AMS-ejb</module>-->
         <module>AMS-ear</module>
         <module>AMS-user-ejb</module>
         <module>AMS-buyer-web</module>
@@ -43,12 +41,6 @@
                 <version>1.0</version>
                 <type>jar</type>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>com.jamith.AuctionManagementSystem</groupId>-->
-            <!--                <artifactId>AMS-ejb</artifactId>-->
-            <!--                <version>1.0</version>-->
-            <!--                <type>ejb</type>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>com.jamith.AuctionManagementSystem</groupId>
                 <artifactId>AMS-user-ejb</artifactId>
@@ -61,12 +53,6 @@
                 <version>1.0</version>
                 <type>ejb</type>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>com.jamith.AuctionManagementSystem</groupId>-->
-            <!--                <artifactId>AMS-web</artifactId>-->
-            <!--                <version>1.0</version>-->
-            <!--                <type>war</type>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>com.jamith.AuctionManagementSystem</groupId>
                 <artifactId>AMS-buyer-web</artifactId>

@@ -118,22 +118,6 @@
             try {
                 const bid = JSON.parse(event.data);
                 document.getElementById('currentBid').textContent = bid.bidAmount.toFixed(2);
-                <%--const minBidSpan = document.getElementById('minBid');--%>
-                <%--const bidInput = document.getElementById('bidAmount');--%>
-                <%--if (minBidSpan && bidInput) {--%>
-                <%--    const newMin = (parseFloat(bid.bidAmount) + ${auction.bidIncrement}).toFixed(2);--%>
-                <%--    minBidSpan.textContent = newMin;--%>
-                <%--    bidInput.min = newMin;--%>
-                <%--}--%>
-                <%--const tbody = document.getElementById('bidTableBody');--%>
-                <%--const row = document.createElement('tr');--%>
-                <%--row.innerHTML = `--%>
-                <%--    <td>${bid.bidId}</td>--%>
-                <%--    <td>${bid.buyerId}</td>--%>
-                <%--    <td>$${bid.bidAmount.toFixed(2)}</td>--%>
-                <%--    <td>${bid.bidTime}</td>--%>
-                <%--`;--%>
-                <%--tbody.prepend(row);--%>
             } catch (e) {
                 console.error('Error parsing WebSocket message: ', e);
             }

@@ -254,49 +254,6 @@ public class AuctionManagerBean implements AuctionManagerRemote {
         }
     }
 
-
-//    @Override
-//    public void placeBid(Long auctionId, BigDecimal bidAmount, String sessionToken) throws AuctionException {
-//        try (Session session = sessionFactory.openSession()) {
-//            ProfileDTO profile = userSessionManager.getUserProfile(sessionToken);
-//
-//            System.out.println("place bid calls");
-//            if (!"BUYER".equals(profile.getRole())) {
-//                throw new AuctionException("Only buyers can place bids");
-//            }
-//            AuctionEntity auction = session.find(AuctionEntity.class, auctionId);
-//            if (auction == null) {
-//                throw new AuctionException("Auction not found");
-//            }
-//            if (!"ACTIVE".equals(auction.getStatus())) {
-//                throw new AuctionException("Auction is not active");
-//            }
-//            if (LocalDateTime.now().isAfter(auction.getEndTime())) {
-//                throw new AuctionException("Auction has ended");
-//            }
-//            BigDecimal minimumBid = auction.getCurrentBid() != null
-//                    ? auction.getCurrentBid().add(auction.getBidIncrement())
-//                    : auction.getStartPrice().add(auction.getBidIncrement());
-//            if (bidAmount.compareTo(minimumBid) < 0) {
-//                throw new AuctionException("Bid must be at least " + minimumBid);
-//            }
-//            session.beginTransaction();
-//            System.out.println("place bid calls ++++++ ");
-//            UserEntity buyer = session.find(UserEntity.class, profile.getUserId());
-//            BidEntity bid = new BidEntity();
-//            bid.setAuction(auction);
-//            bid.setBuyer(buyer);
-//            bid.setBidAmount(bidAmount);
-//            bid.setBidTime(LocalDateTime.now());
-//            auction.setCurrentBid(bidAmount);
-//            session.persist(bid);
-//            session.merge(auction);
-//            session.getTransaction().commit();
-//        } catch (Exception e) {
-//            throw new AuctionException("Failed to list auctions: " + e.getMessage());
-//        }
-//    }
-
     @Override
     public void placeBid(Long auctionId, BigDecimal bidAmount, String sessionToken) throws AuctionException {
         try {
