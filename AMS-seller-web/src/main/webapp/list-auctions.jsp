@@ -43,7 +43,7 @@
 </nav>
 <div class="container mt-4">
     <h2>My Auctions</h2>
-    <a href="create-auction" class="btn btn-primary mb-3">Create New Auction</a>
+    <a href="create-auction.jsp" class="btn btn-primary mb-3">Create New Auction</a>
     <c:if test="${not empty error}">
         <div class="alert alert-danger">${error}</div>
     </c:if>
@@ -72,6 +72,7 @@
                         <td>${auction.status}</td>
                         <td>${auction.endTime}</td>
                         <td>
+                            <a href="auction-details?auctionId=${auction.auctionId}" class="btn btn-sm btn-info">View Details</a>
                             <c:if test="${auction.status == 'PENDING'}">
                                 <a href="update-auction?auctionId=${auction.auctionId}" class="btn btn-sm btn-warning">Update</a>
                                 <form action="delete-auction" method="post" style="display:inline;">

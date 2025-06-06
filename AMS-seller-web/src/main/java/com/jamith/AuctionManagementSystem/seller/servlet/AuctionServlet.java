@@ -1,6 +1,7 @@
 package com.jamith.AuctionManagementSystem.seller.servlet;
 
 import com.jamith.AuctionManagementSystem.core.auction.dto.AuctionDTO;
+import com.jamith.AuctionManagementSystem.core.auction.dto.BidDTO;
 import com.jamith.AuctionManagementSystem.core.auction.exception.AuctionException;
 import com.jamith.AuctionManagementSystem.core.auction.remote.AuctionManagerRemote;
 import com.jamith.AuctionManagementSystem.core.user.dto.ProfileDTO;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 //
 //@WebServlet({"/create-auction", "/update-auction"})
 //public class AuctionServlet extends HttpServlet {
@@ -122,7 +124,7 @@ import java.time.format.DateTimeParseException;
 
 
 
-@WebServlet({"/create-auction", "/update-auction", "/delete-auction", "/list-auctions"})
+@WebServlet({"/create-auction", "/update-auction", "/delete-auction", "/list-auctions", "/auction-details"})
 public class AuctionServlet extends HttpServlet {
     @EJB
     private UserSessionManagerRemote userSessionManager;
@@ -169,6 +171,21 @@ public class AuctionServlet extends HttpServlet {
                 request.setAttribute("startTime", auction.getStartTime().format(FORMATTER));
                 request.setAttribute("endTime", auction.getEndTime().format(FORMATTER));
                 request.getRequestDispatcher("update-auction.jsp").forward(request, response);
+            } else if ("/auction-details".equals(path)) {
+                Long auctionId = Long.parseLong(request.getParameter("auctionId"));
+                AuctionDTO auction = auctionManager.getAuctionDetails(auctionId);
+                if (!auction.getSellerId().equals(profile.getUserId())) {
+                    throw new AuctionException("Not authorized to view this auction");
+                }
+                List<BidDTO> bids = auctionManager.getBidsForAuction(auctionId);
+                BidDTO winner = null;
+                if ("CLOSED".equals(auction.getStatus()) && !bids.isEmpty()) {
+                    winner = bids.get(0); // Highest bid (sorted by bidTime DESC, assuming bidAmount DESC in ties)
+                }
+                request.setAttribute("auction", auction);
+                request.setAttribute("bids", bids);
+                request.setAttribute("winner", winner);
+                request.getRequestDispatcher("auction-details.jsp").forward(request, response);
             }
         } catch (UserException | AuctionException | NumberFormatException e) {
             request.setAttribute("error", e.getMessage());
