@@ -34,6 +34,7 @@ public class LoginServlet extends HttpServlet {
                 HttpSession httpSession = request.getSession();
                 httpSession.setAttribute("sessionToken", session.getSessionToken());
                 ProfileDTO profile = userSessionManager.getUserProfile(session.getSessionToken());
+                httpSession.setAttribute("firstName", profile.getFirstName());
                 if ("SELLER".equals(profile.getRole())) {
                     response.sendRedirect("dashboard.jsp");
                 }  else {

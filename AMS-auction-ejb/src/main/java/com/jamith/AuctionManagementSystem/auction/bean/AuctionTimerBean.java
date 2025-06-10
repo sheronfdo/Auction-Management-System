@@ -21,7 +21,6 @@ public class AuctionTimerBean {
             session.beginTransaction();
 
             System.out.println("Updating auction statuses..."+LocalDateTime.now());
-            // PENDING -> ACTIVE
             Query<AuctionEntity> activateQuery = session.createQuery(
                     "FROM AuctionEntity a WHERE a.status = :status AND a.startTime <= :now AND a.endTime > :now",
                     AuctionEntity.class
@@ -34,7 +33,6 @@ public class AuctionTimerBean {
                 session.merge(entity);
             }
 
-            // ACTIVE -> CLOSED
             Query<AuctionEntity> closeQuery = session.createQuery(
                     "FROM AuctionEntity a WHERE a.status = :status AND a.endTime <= :now",
                     AuctionEntity.class
@@ -45,7 +43,6 @@ public class AuctionTimerBean {
                 entity.setStatus("CLOSED");
                 entity.setUpdatedAt(LocalDateTime.now());
                 session.merge(entity);
-                // TODO: Publish JMS message to AuctionUpdatesTopic
             }
 
             session.getTransaction().commit();

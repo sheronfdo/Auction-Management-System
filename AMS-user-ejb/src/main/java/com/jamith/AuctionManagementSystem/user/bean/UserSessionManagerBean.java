@@ -187,8 +187,6 @@ public class UserSessionManagerBean implements UserSessionManagerRemote {
         }
     }
 
-
-
     @Override
     public ProfileDTO getUserProfileById(String userId, String sessionToken) throws UserException {
         try (Session session = sessionFactory.openSession()) {

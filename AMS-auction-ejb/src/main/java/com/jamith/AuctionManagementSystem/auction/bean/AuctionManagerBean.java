@@ -198,7 +198,6 @@ public class AuctionManagerBean implements AuctionManagerRemote {
                 entity.setUpdatedAt(LocalDateTime.now());
                 session.merge(entity);
                 session.getTransaction().commit();
-                // TODO: Publish JMS message to AuctionUpdatesTopic
             } catch (org.hibernate.StaleObjectStateException e) {
                 throw new AuctionException("Auction closure failed due to concurrent modification");
             }
@@ -293,7 +292,6 @@ public class AuctionManagerBean implements AuctionManagerRemote {
                 session.merge(auction);
                 session.getTransaction().commit();
 
-                // Publish JMS message for live updates
                 try (JMSContext context = connectionFactory.createContext()) {
                     BidDTO bidDTO = new BidDTO();
                     bidDTO.setBidId(bid.getBidId());
@@ -345,9 +343,6 @@ public class AuctionManagerBean implements AuctionManagerRemote {
         }
     }
 
-
-
-    // New methods
     @Override
     public List<AuctionDTO> getAllAuctions() throws AuctionException {
         try (Session session = sessionFactory.openSession()) {

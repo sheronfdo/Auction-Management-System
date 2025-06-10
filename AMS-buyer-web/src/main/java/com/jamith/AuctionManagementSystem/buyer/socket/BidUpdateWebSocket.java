@@ -69,7 +69,8 @@ public class BidUpdateWebSocket {
             return;
         }
         Set<Session> sessions = sessionsByAuction.get(bidDTO.getAuctionId());
-        System.out.println("Broadcasting bid update for auction: " + bidDTO.getAuctionId() + ", sessions: " + (sessions != null ? sessions.size() : "null"));
+        System.out.println("Broadcasting bid update for auction: " + bidDTO.getAuctionId() + ", sessions: "
+                + (sessions != null ? sessions.size() : "null"));
         if (sessions != null) {
             String message = String.format(
                     "{\"bidId\":%d,\"auctionId\":%d,\"buyerId\":%s,\"itemName\":\"%s\",\"bidAmount\":%.2f,\"bidTime\":\"%s\"}",
@@ -87,7 +88,8 @@ public class BidUpdateWebSocket {
                         session.getBasicRemote().sendText(message);
                         return false;
                     } catch (IOException e) {
-                        System.err.println("Failed to send WebSocket message to session " + session.getId() + ": " + e.getMessage());
+                        System.err.println("Failed to send WebSocket message to session " + session.getId() + ": "
+                                + e.getMessage());
                         return true;
                     }
                 }

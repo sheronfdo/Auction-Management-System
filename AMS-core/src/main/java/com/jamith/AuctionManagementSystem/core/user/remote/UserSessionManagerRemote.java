@@ -18,10 +18,7 @@ public interface UserSessionManagerRemote {
     void updateProfile(ProfileDTO profile, String sessionToken) throws UserException;
     List<ProfileDTO> getAllUsers() throws UserException;
 //    ProfileDTO getUserProfileById(String userId) throws UserException;
-
-
     ProfileDTO getUserProfileById(String userId, String sessionToken) throws UserException;
-
     void suspendUser(String userId, String sessionToken) throws UserException;
     void activateUser(String userId, String sessionToken) throws UserException;
 }
